@@ -513,7 +513,7 @@ public abstract class AbstractCalendarAccessor {
                               String recurrence, int recurrenceInterval, String recurrenceWeekstart,
                               String recurrenceByDay, String recurrenceByMonthDay, Long recurrenceEndTime, Long recurrenceCount,
                               String allday,
-                              Integer calendarId, String url) {
+                              Integer calendarId, String url, String exDate, String rDate) {
         ContentResolver cr = this.cordova.getActivity().getContentResolver();
         ContentValues values = new ContentValues();
         final boolean allDayEvent = "true".equals(allday) && isAllDayEvent(new Date(startTime), new Date(endTime));
@@ -553,6 +553,15 @@ public abstract class AbstractCalendarAccessor {
                     ((recurrenceEndTime > -1) ? ";UNTIL=" + sdf.format(new Date(recurrenceEndTime)) : "") +
                     ((recurrenceCount > -1) ? ";COUNT=" + recurrenceCount : "");
             values.put(Events.RRULE, rrule);
+
+            if(exDate != null){
+                values.put(Events.EXDATE, exDate);                
+            }
+
+            if(rDate != null){
+                values.put(Events.RDATE, rDate);                
+            }
+
         }
 
         String createdEventID = null;
