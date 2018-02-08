@@ -37,6 +37,7 @@ public class CalendarProviderAccessor extends AbstractCalendarAccessor {
     keys.put(KeyIndex.EVENTS_RRULE, Events.RRULE);
     keys.put(KeyIndex.EVENTS_EXDATE, Events.EXDATE);
     keys.put(KeyIndex.EVENTS_RDATE, Events.RDATE);
+    keys.put(KeyIndex.EVENTS_COLOR_KEY, Events.EVENTS_COLOR_KEY);
     keys.put(KeyIndex.EVENTS_ALL_DAY, Events.ALL_DAY);
     keys.put(KeyIndex.INSTANCES_ID, Instances._ID);
     keys.put(KeyIndex.INSTANCES_EVENT_ID, Instances.EVENT_ID);
@@ -95,10 +96,10 @@ public class CalendarProviderAccessor extends AbstractCalendarAccessor {
                             String description, String location, Long firstReminderMinutes, Long secondReminderMinutes,
                             String recurrence, int recurrenceInterval, String recurrenceWeekstart,
                             String recurrenceByDay, String recurrenceByMonthDay, Long recurrenceEndTime, Long recurrenceCount,
-                            String allday, Integer calendarId, String url, String exDate, String rDate) {
+                            String allday, Integer calendarId, String url, String exDate, String rDate, String colorKey) {
     eventsUri = eventsUri == null ? Uri.parse(CONTENT_PROVIDER + CONTENT_PROVIDER_PATH_EVENTS) : eventsUri;
     return super.createEvent(eventsUri, title, startTime, endTime, description, location,
             firstReminderMinutes, secondReminderMinutes, recurrence, recurrenceInterval, recurrenceWeekstart,
-            recurrenceByDay, recurrenceByMonthDay, recurrenceEndTime, recurrenceCount, allday, calendarId, url, exDate, rDate);
+            recurrenceByDay, recurrenceByMonthDay, recurrenceEndTime, recurrenceCount, allday, calendarId, url, exDate, rDate, colorKey);
   }
 }

@@ -534,7 +534,9 @@ public class Calendar extends CordovaPlugin {
                     argOptionsObject.optInt("calendarId", 1),
                     getPossibleNullString("url", argOptionsObject),
                     getPossibleNullString("exDate", argOptionsObject),
-                    getPossibleNullString("rDate", argOptionsObject));
+                    getPossibleNullString("rDate", argOptionsObject),
+                    getPossibleNullString("color", argOptionsObject)
+            );
             if (createdEventID != null) {
               callback.success(createdEventID);
             } else {

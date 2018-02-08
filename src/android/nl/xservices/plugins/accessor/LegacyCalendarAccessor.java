@@ -29,6 +29,7 @@ public class LegacyCalendarAccessor extends AbstractCalendarAccessor {
     keys.put(KeyIndex.EVENTS_START, "dtstart");
     keys.put(KeyIndex.EVENTS_END, "dtend");
     keys.put(KeyIndex.EVENTS_RRULE, "rrule");
+    keys.put(KeyIndex.EVENTS_COLOR_KEY, "colorKey");
     keys.put(KeyIndex.EVENTS_ALL_DAY, "allDay");
     keys.put(KeyIndex.INSTANCES_ID, "_id");
     keys.put(KeyIndex.INSTANCES_EVENT_ID, "event_id");

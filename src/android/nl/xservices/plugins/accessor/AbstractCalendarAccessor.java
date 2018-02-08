@@ -141,6 +141,7 @@ public abstract class AbstractCalendarAccessor {
         EVENTS_START,
         EVENTS_END,
         EVENTS_RRULE,
+        EVENTS_COLOR_KEY,
         EVENTS_ALL_DAY,
         INSTANCES_ID,
         INSTANCES_EVENT_ID,
@@ -513,7 +514,7 @@ public abstract class AbstractCalendarAccessor {
                               String recurrence, int recurrenceInterval, String recurrenceWeekstart,
                               String recurrenceByDay, String recurrenceByMonthDay, Long recurrenceEndTime, Long recurrenceCount,
                               String allday,
-                              Integer calendarId, String url, String exDate, String rDate) {
+                              Integer calendarId, String url, String exDate, String rDate, String colorKey) {
         ContentResolver cr = this.cordova.getActivity().getContentResolver();
         ContentValues values = new ContentValues();
         final boolean allDayEvent = "true".equals(allday) && isAllDayEvent(new Date(startTime), new Date(endTime));
@@ -562,6 +563,10 @@ public abstract class AbstractCalendarAccessor {
                 values.put(Events.RDATE, rDate);                
             }
 
+        }
+
+        if(colorKey != null){
+            values.put(Events.EVENT_COLOR_KEY, colorKey);
         }
 
         String createdEventID = null;
