@@ -19,7 +19,7 @@ public class LegacyCalendarAccessor extends AbstractCalendarAccessor {
     EnumMap<KeyIndex, String> keys = new EnumMap<KeyIndex, String>(KeyIndex.class);
     keys.put(KeyIndex.CALENDARS_ID, "_id");
     keys.put(KeyIndex.CALENDARS_NAME, "name");
-	keys.put(KeyIndex.CALENDARS_DISPLAY_NAME, "displayname");
+    keys.put(KeyIndex.CALENDARS_DISPLAY_NAME, "displayname");
     keys.put(KeyIndex.CALENDARS_VISIBLE, "selected");
     keys.put(KeyIndex.EVENTS_ID, "_id");
     keys.put(KeyIndex.EVENTS_CALENDAR_ID, "calendar_id");
@@ -29,6 +29,8 @@ public class LegacyCalendarAccessor extends AbstractCalendarAccessor {
     keys.put(KeyIndex.EVENTS_START, "dtstart");
     keys.put(KeyIndex.EVENTS_END, "dtend");
     keys.put(KeyIndex.EVENTS_RRULE, "rrule");
+    keys.put(KeyIndex.EVENTS_EXDATE, "exDate");
+    keys.put(KeyIndex.EVENTS_RDATE, "rDate");
     keys.put(KeyIndex.EVENTS_COLOR_KEY, "colorKey");
     keys.put(KeyIndex.EVENTS_ALL_DAY, "allDay");
     keys.put(KeyIndex.INSTANCES_ID, "_id");
@@ -96,11 +98,11 @@ public class LegacyCalendarAccessor extends AbstractCalendarAccessor {
                             String description, String location, Long firstReminderMinutes, Long secondReminderMinutes,
                             String recurrence, int recurrenceInterval, String recurrenceWeekstart,
                             String recurrenceByDay, String recurrenceByMonthDay, Long recurrenceEndTime, Long recurrenceCount,
-                            String allday, Integer calendarId, String url) {
+                            String allday, Integer calendarId, String url, String exDate, String rDate, String colorKey) {
     eventsUri = eventsUri == null ? Uri.parse(CONTENT_PROVIDER_PRE_FROYO + CONTENT_PROVIDER_PATH_EVENTS) : eventsUri;
     return super.createEvent(eventsUri, title, startTime, endTime, description, location,
             firstReminderMinutes, secondReminderMinutes, recurrence, recurrenceInterval, recurrenceWeekstart,
-            recurrenceByDay, recurrenceByMonthDay, recurrenceEndTime, recurrenceCount, allday, calendarId, url);
+            recurrenceByDay, recurrenceByMonthDay, recurrenceEndTime, recurrenceCount, allday, calendarId, url, exDate, rDate, colorKey);
   }
 
 }

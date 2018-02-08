@@ -37,7 +37,7 @@ public class CalendarProviderAccessor extends AbstractCalendarAccessor {
     keys.put(KeyIndex.EVENTS_RRULE, Events.RRULE);
     keys.put(KeyIndex.EVENTS_EXDATE, Events.EXDATE);
     keys.put(KeyIndex.EVENTS_RDATE, Events.RDATE);
-    keys.put(KeyIndex.EVENTS_COLOR_KEY, Events.EVENTS_COLOR_KEY);
+    keys.put(KeyIndex.EVENTS_COLOR_KEY, Events.EVENT_COLOR_KEY);
     keys.put(KeyIndex.EVENTS_ALL_DAY, Events.ALL_DAY);
     keys.put(KeyIndex.INSTANCES_ID, Instances._ID);
     keys.put(KeyIndex.INSTANCES_EVENT_ID, Instances.EVENT_ID);
