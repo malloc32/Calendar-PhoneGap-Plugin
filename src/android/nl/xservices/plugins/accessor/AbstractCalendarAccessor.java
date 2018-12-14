@@ -461,6 +461,9 @@ public abstract class AbstractCalendarAccessor {
         }
         // Fetch events from the events table for more event info.
         Map<String, Event> eventMap = fetchEventsAsMap(instances, calendarId);
+        if(eventMap == null){
+            return result;
+        }
         // Fetch event attendees
         Map<String, ArrayList<Attendee>> attendeeMap =
                 fetchAttendeesForEventsAsMap(eventMap.keySet().toArray(new String[0]));
