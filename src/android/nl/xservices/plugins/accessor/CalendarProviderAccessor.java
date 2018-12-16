@@ -21,9 +21,9 @@ public class CalendarProviderAccessor extends AbstractCalendarAccessor {
 
   @Override
   protected EnumMap<KeyIndex, String> initContentProviderKeys() {
-    EnumMap<KeyIndex, String> keys = new EnumMap<KeyIndex, String>(
-            KeyIndex.class);
+    EnumMap<KeyIndex, String> keys = new EnumMap<KeyIndex, String>(KeyIndex.class);
     keys.put(KeyIndex.CALENDARS_ID, Calendars._ID);
+    keys.put(KeyIndex.IS_PRIMARY, Calendars.IS_PRIMARY);
     keys.put(KeyIndex.CALENDARS_NAME, Calendars.NAME);
     keys.put(KeyIndex.CALENDARS_DISPLAY_NAME, Calendars.CALENDAR_DISPLAY_NAME);
     keys.put(KeyIndex.CALENDARS_VISIBLE, Calendars.VISIBLE);
@@ -86,9 +86,15 @@ public class CalendarProviderAccessor extends AbstractCalendarAccessor {
   }
 
   @Override
-  public boolean deleteEvent(Uri eventsUri, long startFrom, long startTo, String title, String location) {
+  public boolean deleteEvent(Uri eventsUri, long startFrom, long startTo, String title, String location, String notes) {
     eventsUri = eventsUri == null ? Uri.parse(CONTENT_PROVIDER + CONTENT_PROVIDER_PATH_EVENTS) : eventsUri;
-    return super.deleteEvent(eventsUri, startFrom, startTo, title, location);
+    return super.deleteEvent(eventsUri, startFrom, startTo, title, location, notes);
+  }
+
+  @Override
+  public boolean deleteEventById(Uri eventsUri, long id, long fromDate) {
+    eventsUri = eventsUri == null ? Uri.parse(CONTENT_PROVIDER + CONTENT_PROVIDER_PATH_EVENTS) : eventsUri;
+    return super.deleteEventById(eventsUri, id, fromDate);
   }
 
   @Override

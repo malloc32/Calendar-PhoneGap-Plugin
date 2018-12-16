@@ -9,28 +9,28 @@ Calendar.prototype.getCreateCalendarOptions = function () {
   };
 };
 
-Calendar.prototype.hasReadPermission = function (callback) {
-  cordova.exec(callback, null, "Calendar", "hasReadPermission", []);
+Calendar.prototype.hasReadPermission = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Calendar", "hasReadPermission", []);
 };
 
-Calendar.prototype.requestReadPermission = function (callback) {
-  cordova.exec(callback, null, "Calendar", "requestReadPermission", []);
+Calendar.prototype.requestReadPermission = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Calendar", "requestReadPermission", []);
 };
 
-Calendar.prototype.hasWritePermission = function (callback) {
-  cordova.exec(callback, null, "Calendar", "hasWritePermission", []);
+Calendar.prototype.hasWritePermission = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Calendar", "hasWritePermission", []);
 };
 
-Calendar.prototype.requestWritePermission = function (callback) {
-  cordova.exec(callback, null, "Calendar", "requestWritePermission", []);
+Calendar.prototype.requestWritePermission = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Calendar", "requestWritePermission", []);
 };
 
-Calendar.prototype.hasReadWritePermission = function (callback) {
-  cordova.exec(callback, null, "Calendar", "hasReadWritePermission", []);
+Calendar.prototype.hasReadWritePermission = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Calendar", "hasReadWritePermission", []);
 };
 
-Calendar.prototype.requestReadWritePermission = function (callback) {
-  cordova.exec(callback, null, "Calendar", "requestReadWritePermission", []);
+Calendar.prototype.requestReadWritePermission = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Calendar", "requestReadWritePermission", []);
 };
 
 Calendar.prototype.createCalendar = function (calendarNameOrOptionsObject, successCallback, errorCallback) {
@@ -208,6 +208,13 @@ Calendar.prototype.deleteEventFromNamedCalendar = function (title, location, not
   }])
 };
 
+Calendar.prototype.deleteEventById = function (id, fromDate, successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Calendar", "deleteEventById", [{
+    "id": id,
+    "fromTime": fromDate instanceof Date ? fromDate.getTime() : null
+  }]);
+};
+
 Calendar.prototype.modifyEventWithOptions = function (title, location, notes, startDate, endDate, newTitle, newLocation, newNotes, newStartDate, newEndDate, options, newOptions, successCallback, errorCallback) {
   if (!(newStartDate instanceof Date && newEndDate instanceof Date)) {
     errorCallback("newStartDate and newEndDate must be JavaScript Date Objects");
@@ -268,6 +275,19 @@ Calendar.prototype.listEventsInRange = function (startDate, endDate, successCall
 
 Calendar.prototype.listCalendars = function (successCallback, errorCallback) {
   cordova.exec(successCallback, errorCallback, "Calendar", "listCalendars", []);
+};
+
+Calendar.prototype.parseEventDate = function (dateStr) {
+  // Handle yyyyMMddTHHmmssZ iCalendar UTC format
+  var icalRegExp = /\b(\d{4})(\d{2})(\d{2}T\d{2})(\d{2})(\d{2}Z)\b/;
+  if (icalRegExp.test(dateStr))
+    return new Date(String(dateStr).replace(icalRegExp, '$1-$2-$3:$4:$5'));
+
+  var spl;
+  // Handle yyyy-MM-dd HH:mm:ss format returned by AbstractCalendarAccessor.java L66 and Calendar.m L378, and yyyyMMddTHHmmss iCalendar local format, and similar
+  return (spl = /^\s*(\d{4})\D?(\d{2})\D?(\d{2})\D?(\d{2})\D?(\d{2})\D?(\d{2})\s*$/.exec(dateStr))
+    && new Date(spl[1], spl[2] - 1, spl[3], spl[4], spl[5], spl[6])
+    || new Date(dateStr);
 };
 
 Calendar.install = function () {

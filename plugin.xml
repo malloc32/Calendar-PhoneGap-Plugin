@@ -3,7 +3,7 @@
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cordova-plugin-calendar"
-    version="5.0.0">
+    version="5.1.3">
 
   <name>Calendar</name>
 
@@ -47,6 +47,7 @@
         <string>nl</string>
         <string>fr</string>
         <string>it</string>
+        <string>pt-BR</string>
       </array>
     </config-file>
     <!-- Usage description of the Calendar for iOS 6+, mandatory since iOS 10 -->
@@ -79,7 +80,7 @@
     <source-file src="src/android/nl/xservices/plugins/accessor/LegacyCalendarAccessor.java"
                  target-dir="src/nl/xservices/plugins/accessor"/>
   </platform>
-  
+
   <!-- windows -->
   <platform name="windows">
     <js-module src="src/windows/appointment.js" name="appointment">
