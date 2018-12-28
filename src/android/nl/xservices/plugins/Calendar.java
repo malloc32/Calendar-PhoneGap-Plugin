@@ -44,6 +44,7 @@ public class Calendar extends CordovaPlugin {
   private static final String ACTION_CREATE_EVENT_INTERACTIVELY = "createEventInteractively";
   private static final String ACTION_DELETE_EVENT = "deleteEvent";
   private static final String ACTION_DELETE_EVENT_BY_ID = "deleteEventById";
+  private static final String ACTION_DELETE_INSTANCE = "deleteInstance";
   private static final String ACTION_FIND_EVENT_WITH_OPTIONS = "findEventWithOptions";
   private static final String ACTION_LIST_EVENTS_IN_RANGE = "listEventsInRange";
   private static final String ACTION_LIST_CALENDARS = "listCalendars";
@@ -56,6 +57,8 @@ public class Calendar extends CordovaPlugin {
   private static final int PERMISSION_REQCODE_CREATE_EVENT = 102;
   private static final int PERMISSION_REQCODE_DELETE_EVENT = 103;
   private static final int PERMISSION_REQCODE_DELETE_EVENT_BY_ID = 104;
+  private static final int PERMISSION_REQCODE_DELETE_INSTANCE = 105;
+
 
   // read permissions
   private static final int PERMISSION_REQCODE_FIND_EVENTS = 200;
@@ -105,6 +108,9 @@ public class Calendar extends CordovaPlugin {
       return true;
     } else if (!hasLimitedSupport && ACTION_DELETE_EVENT_BY_ID.equals(action)) {
       deleteEventById(args);
+      return true;
+    } else if (!hasLimitedSupport && ACTION_DELETE_INSTANCE.equals(action)) {
+      deleteInstance(args);
       return true;
     } else if (ACTION_LIST_CALENDARS.equals(action)) {
       listCalendars();
@@ -495,6 +501,31 @@ public class Calendar extends CordovaPlugin {
         final long fromTime =  opts != null ? opts.optLong("fromTime", -1) : -1;
 
         boolean deleteResult = getCalendarAccessor().deleteEventById(null, id, fromTime);
+
+        callback.sendPluginResult(new PluginResult(PluginResult.Status.OK, deleteResult));
+      } catch (Exception e) {
+        System.err.println("Exception: " + e.getMessage());
+        callback.error(e.getMessage());
+      }
+    }});
+  }
+
+  private void deleteInstance(final JSONArray args) {
+
+    // note that if the dev didn't call requestWritePermission before calling this method and calendarPermissionGranted returns false,
+    // the app will ask permission and this method needs to be invoked again (done for backward compat).
+    if (!calendarPermissionGranted(Manifest.permission.WRITE_CALENDAR)) {
+      requestWritePermission(PERMISSION_REQCODE_DELETE_INSTANCE);
+      return;
+    }
+
+    cordova.getThreadPool().execute(new Runnable() { @Override public void run() {
+      try {
+        final JSONObject opts = args.optJSONObject(0);
+        final long id = opts != null ? opts.optLong("id", -1) : -1;
+        final long date =  opts != null ? opts.optLong("date", -1) : -1;
+
+        boolean deleteResult = getCalendarAccessor().deleteInstance(null, id, date);
 
         callback.sendPluginResult(new PluginResult(PluginResult.Status.OK, deleteResult));
       } catch (Exception e) {

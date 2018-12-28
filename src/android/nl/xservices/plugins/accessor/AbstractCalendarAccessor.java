@@ -20,6 +20,7 @@ import java.util.*;
 
 import static android.provider.CalendarContract.Events;
 import android.provider.CalendarContract.Instances;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractCalendarAccessor {
 
@@ -558,11 +559,11 @@ public abstract class AbstractCalendarAccessor {
             // Scans just over a year.
             // Not using a wider range because it can corrupt the Calendar Storage state! https://issuetracker.google.com/issues/36980229
             Cursor cur = queryEventInstances(fromTime,
-                                             fromTime + 1000L * 60L * 60L * 24L * 367L,
-                                             new String[] { Instances.DTSTART },
-                                             Instances.EVENT_ID + " = ?",
-                                             new String[] { Long.toString(id) },
-                                             Instances.DTSTART);
+                    fromTime + 1000L * 60L * 60L * 24L * 367L,
+                    new String[] { Instances.DTSTART },
+                    Instances.EVENT_ID + " = ?",
+                    new String[] { Long.toString(id) },
+                    Instances.DTSTART);
             if (cur.moveToNext()) {
                 targDtStart = cur.getLong(0);
             }
@@ -598,6 +599,57 @@ public abstract class AbstractCalendarAccessor {
         return updated > 0;
     }
 
+    public boolean  deleteInstance(Uri eventsUri, long eventId, long date){
+        long mia = date;
+        // Find target instance
+       long targDtStart = -1;
+        {
+            // Scans just over a year.
+            // Not using a wider range because it can corrupt the Calendar Storage state! https://issuetracker.google.com/issues/36980229
+            Cursor cur = queryEventInstances(date,
+                    date + 1000L * 60L * 60L * 24L * 367L,
+                    new String[] { Instances.BEGIN },
+                    Instances.EVENT_ID + " = ?",
+                    new String[] { Long.toString(eventId) },
+                    Instances.ORIGINAL_INSTANCE_TIME);
+            /*while (cur.moveToNext()) {
+                if(date == cur.getLong(0)){
+                    targDtStart = cur.getLong(0);
+                    break;
+                }
+
+            }*/
+            if(cur.moveToNext()){
+                targDtStart = cur.getLong(0);
+            }
+
+            cur.close();
+        }
+        if (targDtStart == -1) {
+            // Nothing to delete
+            return false;
+        }
+
+        ContentValues args0 = new ContentValues();
+        args0.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, targDtStart);
+        args0.put(CalendarContract.Events.STATUS, Events.STATUS_CONFIRMED);
+
+        ContentValues args = new ContentValues();
+        args.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, targDtStart);
+        args.put(CalendarContract.Events.STATUS,CalendarContract.Events.STATUS_CANCELED);
+
+
+        Uri.Builder eventUriBuilder = CalendarContract.Events.CONTENT_EXCEPTION_URI.buildUpon();
+        ContentUris.appendId(eventUriBuilder, eventId);
+        //try {
+           final Uri resultUri0 = this.cordova.getActivity().getContentResolver().insert(eventUriBuilder.build(), args0);
+            final Uri resultUri = this.cordova.getActivity().getContentResolver().insert(eventUriBuilder.build(), args);
+            int eventID = Integer.parseInt(resultUri.getLastPathSegment());
+       // } catch (Exception e) {
+       // }
+        return eventID>0;
+    };
+
     public String createEvent(Uri eventsUri, String title, long startTime, long endTime, String description,
                               String location, Long firstReminderMinutes, Long secondReminderMinutes,
                               String recurrence, int recurrenceInterval, String recurrenceWeekstart,
@@ -615,7 +667,21 @@ public abstract class AbstractCalendarAccessor {
         } else {
             values.put(Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
             values.put(Events.DTSTART, startTime);
-            values.put(Events.DTEND, endTime);
+            values.put(CalendarContract.Events.STATUS, Events.STATUS_CONFIRMED);
+            if(recurrence!=null) {
+//For support lower apis (16) not use this code (required 26)
+                //Duration duration = Duration.ofMillis(endTime-startTime);
+                //values.put(Events.DURATION, duration.toString());
+                long millis = endTime-startTime;
+                long hours = TimeUnit.MILLISECONDS.toHours(millis);
+                millis -= TimeUnit.HOURS.toMillis(hours);
+                long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
+                millis -= TimeUnit.MINUTES.toMillis(minutes);
+                long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
+                values.put(Events.DURATION, String.format("P%dH%dM%dS",hours,minutes,seconds));
+            }else{
+                values.put(Events.DTEND, endTime);
+            }//
         }
         values.put(Events.ALL_DAY, allDayEvent ? 1 : 0);
         values.put(Events.TITLE, title);
@@ -632,6 +698,8 @@ public abstract class AbstractCalendarAccessor {
         values.put(Events.CALENDAR_ID, calendarId);
         values.put(Events.EVENT_LOCATION, location);
 
+        boolean isGoogleAccount = false;
+
         if (recurrence != null) {
             String rrule = "FREQ=" + recurrence.toUpperCase() +
                     ((recurrenceInterval > -1) ? ";INTERVAL=" + recurrenceInterval : "") +
@@ -642,12 +710,30 @@ public abstract class AbstractCalendarAccessor {
                     ((recurrenceCount > -1) ? ";COUNT=" + recurrenceCount : "");
             values.put(Events.RRULE, rrule);
 
-            if(exDate != null){
-                values.put(Events.EXDATE, exDate);                
+
+            Cursor curCalendar = null;
+            String selection =  CalendarContract.Calendars._ID + " = ?";
+            String[] selectionArgs = new String[] {Long.toString(calendarId)};
+            String[] projection = new String[] {CalendarContract.Calendars.ACCOUNT_NAME,CalendarContract.Calendars.ACCOUNT_TYPE};
+            curCalendar = queryCalendars(projection, selection, selectionArgs, null);
+
+            String accountName = null;
+            String accountType = null;
+
+            if(curCalendar.moveToNext()){
+                accountName = curCalendar.getString(0);
+                accountType = curCalendar.getString(1);
+            }
+
+            isGoogleAccount = accountType.equals("com.google");
+
+            //Use exdate if google account, for other types use exceptions
+            if(exDate != null && isGoogleAccount){
+                values.put(Events.EXDATE, exDate);
             }
 
             if(rDate != null){
-                values.put(Events.RDATE, rDate);                
+                values.put(Events.RDATE, rDate);
             }
 
         }
@@ -660,6 +746,47 @@ public abstract class AbstractCalendarAccessor {
         try {
             Uri uri = cr.insert(eventsUri, values);
             createdEventID = uri.getLastPathSegment();
+
+            if(exDate != null && !isGoogleAccount){
+                long targDtStart = -1;
+                List<String> datesToExclude = Arrays.asList(exDate.split(","));
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+                simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                List<Long> millisToExclude = new ArrayList();
+                for (String dateToExclude:datesToExclude) {
+                    millisToExclude.add(simpleDateFormat.parse(dateToExclude.substring(0,dateToExclude.length()-1)).getTime());
+                }
+                System.out.println("EXDATES:"+exDate);
+
+                Cursor cur = queryEventInstances(startTime,startTime + 1000L * 60L * 60L * 24L * 367L,
+                        new String[] { Instances.BEGIN },
+                        Instances.EVENT_ID + " = ?",
+                        new String[] { createdEventID },
+                        Instances.ORIGINAL_INSTANCE_TIME);
+
+                while(cur.moveToNext()){
+                    targDtStart = cur.getLong(0);
+                    System.out.println("MIRAR:"+targDtStart);
+                    if(millisToExclude.contains(targDtStart)){
+
+                        ContentValues args = new ContentValues();
+                        args.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, targDtStart);
+                        args.put(CalendarContract.Events.STATUS, Events.STATUS_CANCELED);
+                        Uri.Builder eventUriBuilder = CalendarContract.Events.CONTENT_EXCEPTION_URI.buildUpon();
+                        ContentUris.appendId(eventUriBuilder, Long.parseLong(createdEventID));
+                        final Uri resultUri = cr.insert(eventUriBuilder.build(), args);
+                        System.out.println("CANCELADA:"+targDtStart);
+                        if(resultUri == null){
+                            System.out.print("NULLLLLL"+targDtStart);
+                        }
+                        int eventID = Integer.parseInt(resultUri.getLastPathSegment());
+                    }
+
+                }
+
+                cur.close();
+            }
+
             Log.d(LOG_TAG, "Created event with ID " + createdEventID);
 
             if (firstReminderMinutes > -1) {
