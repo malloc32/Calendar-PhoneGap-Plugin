@@ -659,6 +659,7 @@ public abstract class AbstractCalendarAccessor {
         ContentResolver cr = this.cordova.getActivity().getContentResolver();
         ContentValues values = new ContentValues();
         final boolean allDayEvent = "true".equals(allday) && isAllDayEvent(new Date(startTime), new Date(endTime));
+        values.put(CalendarContract.Events.STATUS, Events.STATUS_CONFIRMED);
         if (allDayEvent) {
             //all day events must be in UTC time zone per Android specification, getOffset accounts for daylight savings time
             values.put(Events.EVENT_TIMEZONE, "UTC");
@@ -667,18 +668,14 @@ public abstract class AbstractCalendarAccessor {
         } else {
             values.put(Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
             values.put(Events.DTSTART, startTime);
-            values.put(CalendarContract.Events.STATUS, Events.STATUS_CONFIRMED);
+
             if(recurrence!=null) {
 //For support lower apis (16) not use this code (required 26)
                 //Duration duration = Duration.ofMillis(endTime-startTime);
                 //values.put(Events.DURATION, duration.toString());
                 long millis = endTime-startTime;
-                long hours = TimeUnit.MILLISECONDS.toHours(millis);
-                millis -= TimeUnit.HOURS.toMillis(hours);
-                long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
-                millis -= TimeUnit.MINUTES.toMillis(minutes);
-                long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
-                values.put(Events.DURATION, String.format("P%dH%dM%dS",hours,minutes,seconds));
+                long seconds = millis/1000;
+                values.put(Events.DURATION, String.format("PT%dS",seconds));
             }else{
                 values.put(Events.DTEND, endTime);
             }//
@@ -700,6 +697,20 @@ public abstract class AbstractCalendarAccessor {
 
         boolean isGoogleAccount = false;
 
+        Cursor curCalendar = null;
+        String selection =  CalendarContract.Calendars._ID + " = ?";
+        String[] selectionArgs = new String[] {Long.toString(calendarId)};
+        String[] projection = new String[] {CalendarContract.Calendars.ACCOUNT_NAME,CalendarContract.Calendars.ACCOUNT_TYPE};
+        curCalendar = queryCalendars(projection, selection, selectionArgs, null);
+
+        String accountName = null;
+        String accountType = null;
+
+        if(curCalendar.moveToNext()){
+            accountName = curCalendar.getString(0);
+            accountType = curCalendar.getString(1);
+        }
+
         if (recurrence != null) {
             String rrule = "FREQ=" + recurrence.toUpperCase() +
                     ((recurrenceInterval > -1) ? ";INTERVAL=" + recurrenceInterval : "") +
@@ -711,19 +722,7 @@ public abstract class AbstractCalendarAccessor {
             values.put(Events.RRULE, rrule);
 
 
-            Cursor curCalendar = null;
-            String selection =  CalendarContract.Calendars._ID + " = ?";
-            String[] selectionArgs = new String[] {Long.toString(calendarId)};
-            String[] projection = new String[] {CalendarContract.Calendars.ACCOUNT_NAME,CalendarContract.Calendars.ACCOUNT_TYPE};
-            curCalendar = queryCalendars(projection, selection, selectionArgs, null);
 
-            String accountName = null;
-            String accountType = null;
-
-            if(curCalendar.moveToNext()){
-                accountName = curCalendar.getString(0);
-                accountType = curCalendar.getString(1);
-            }
 
             isGoogleAccount = accountType.equals("com.google");
 
@@ -743,8 +742,30 @@ public abstract class AbstractCalendarAccessor {
         }
 
         String createdEventID = null;
+
+
+
+        String seedString = Long.toString(new Date().getTime());
+
         try {
-            Uri uri = cr.insert(eventsUri, values);
+
+            Uri insertUri = Events.CONTENT_URI;
+
+            if(exDate!=null) {
+
+                values.put(Events._SYNC_ID, seedString);
+                // values.put(Events.SYNC_DATA4, "SYNC_V:" + seedString);
+                // values.put(Events.SYNC_DATA5, "SYNC_TIME:" + seedString);
+                //values.put(Events.DIRTY, 1);
+                insertUri = asSyncAdapter(insertUri, accountName, accountType);
+            }
+
+            Uri uri = cr.insert(insertUri, values);
+
+
+
+
+           // Uri uri = cr.insert(eventsUri, values);
             createdEventID = uri.getLastPathSegment();
 
             if(exDate != null && !isGoogleAccount){
@@ -771,6 +792,8 @@ public abstract class AbstractCalendarAccessor {
 
                         ContentValues args = new ContentValues();
                         args.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, targDtStart);
+                        //args.put(Events.TITLE, "FIJO");
+                        args.put(CalendarContract.Events.ORIGINAL_SYNC_ID, new Date().getTime());
                         args.put(CalendarContract.Events.STATUS, Events.STATUS_CANCELED);
                         Uri.Builder eventUriBuilder = CalendarContract.Events.CONTENT_EXCEPTION_URI.buildUpon();
                         ContentUris.appendId(eventUriBuilder, Long.parseLong(createdEventID));
@@ -920,5 +943,13 @@ public abstract class AbstractCalendarAccessor {
 
     public static boolean isAllDayEvent(final Date startDate, final Date endDate) {
         return ((endDate.getTime() - startDate.getTime()) % (24 * 60 * 60 * 1000) == 0);
+    }
+
+    static Uri asSyncAdapter(Uri uri, String account, String accountType) {
+        return uri.buildUpon()
+                .appendQueryParameter(android.provider.CalendarContract.CALLER_IS_SYNCADAPTER,
+                        "true")
+                .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_NAME, account)
+                .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_TYPE, accountType).build();
     }
 }
