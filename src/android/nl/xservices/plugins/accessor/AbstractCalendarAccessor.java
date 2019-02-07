@@ -599,57 +599,6 @@ public abstract class AbstractCalendarAccessor {
         return updated > 0;
     }
 
-    public boolean  deleteInstance(Uri eventsUri, long eventId, long date){
-        long mia = date;
-        // Find target instance
-       long targDtStart = -1;
-        {
-            // Scans just over a year.
-            // Not using a wider range because it can corrupt the Calendar Storage state! https://issuetracker.google.com/issues/36980229
-            Cursor cur = queryEventInstances(date,
-                    date + 1000L * 60L * 60L * 24L * 367L,
-                    new String[] { Instances.BEGIN },
-                    Instances.EVENT_ID + " = ?",
-                    new String[] { Long.toString(eventId) },
-                    Instances.ORIGINAL_INSTANCE_TIME);
-            /*while (cur.moveToNext()) {
-                if(date == cur.getLong(0)){
-                    targDtStart = cur.getLong(0);
-                    break;
-                }
-
-            }*/
-            if(cur.moveToNext()){
-                targDtStart = cur.getLong(0);
-            }
-
-            cur.close();
-        }
-        if (targDtStart == -1) {
-            // Nothing to delete
-            return false;
-        }
-
-        ContentValues args0 = new ContentValues();
-        args0.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, targDtStart);
-        args0.put(CalendarContract.Events.STATUS, Events.STATUS_CONFIRMED);
-
-        ContentValues args = new ContentValues();
-        args.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, targDtStart);
-        args.put(CalendarContract.Events.STATUS,CalendarContract.Events.STATUS_CANCELED);
-
-
-        Uri.Builder eventUriBuilder = CalendarContract.Events.CONTENT_EXCEPTION_URI.buildUpon();
-        ContentUris.appendId(eventUriBuilder, eventId);
-        //try {
-           final Uri resultUri0 = this.cordova.getActivity().getContentResolver().insert(eventUriBuilder.build(), args0);
-            final Uri resultUri = this.cordova.getActivity().getContentResolver().insert(eventUriBuilder.build(), args);
-            int eventID = Integer.parseInt(resultUri.getLastPathSegment());
-       // } catch (Exception e) {
-       // }
-        return eventID>0;
-    };
-
     public String createEvent(Uri eventsUri, String title, long startTime, long endTime, String description,
                               String location, Long firstReminderMinutes, Long secondReminderMinutes,
                               String recurrence, int recurrenceInterval, String recurrenceWeekstart,
