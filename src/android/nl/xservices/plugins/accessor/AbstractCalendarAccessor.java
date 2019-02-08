@@ -136,6 +136,9 @@ public abstract class AbstractCalendarAccessor {
         CALENDARS_NAME,
         CALENDARS_VISIBLE,
         CALENDARS_DISPLAY_NAME,
+        CALENDARS_ACCOUNT_NAME,
+        CALENDARS_ACCOUNT_TYPE,
+        CALENDARS_OWNER_ACCOUNT,
         EVENTS_ID,
         EVENTS_CALENDAR_ID,
         EVENTS_DESCRIPTION,
@@ -278,7 +281,10 @@ public abstract class AbstractCalendarAccessor {
                         this.getKey(KeyIndex.CALENDARS_ID),
                         this.getKey(KeyIndex.CALENDARS_NAME),
                         this.getKey(KeyIndex.CALENDARS_DISPLAY_NAME),
-                        this.getKey(KeyIndex.IS_PRIMARY)
+                        this.getKey(KeyIndex.IS_PRIMARY),
+                        this.getKey(KeyIndex.CALENDARS_ACCOUNT_NAME),
+                        this.getKey(KeyIndex.CALENDARS_ACCOUNT_TYPE),
+                        this.getKey(KeyIndex.CALENDARS_OWNER_ACCOUNT)
                 },
                 this.getKey(KeyIndex.CALENDARS_VISIBLE) + "=1", null, null
         );
@@ -298,6 +304,10 @@ public abstract class AbstractCalendarAccessor {
                     primaryColumnIndex = cursor.getColumnIndex("COALESCE(isPrimary, ownerAccount = account_name)");
                 }
                 calendar.put("isPrimary", "1".equals(cursor.getString(primaryColumnIndex)));
+                calendar.put("accountName", cursor.getString(cursor.getColumnIndex(this.getKey(KeyIndex.CALENDARS_ACCOUNT_NAME))));
+                calendar.put("accountType", cursor.getString(cursor.getColumnIndex(this.getKey(KeyIndex.CALENDARS_ACCOUNT_TYPE))));
+                calendar.put("ownerAccount", cursor.getString(cursor.getColumnIndex(this.getKey(KeyIndex.CALENDARS_OWNER_ACCOUNT))));
+
                 calendarsWrapper.put(calendar);
             } while (cursor.moveToNext());
             cursor.close();
@@ -533,9 +543,9 @@ public abstract class AbstractCalendarAccessor {
         String evRRule = null;
         {
             Cursor cur = queryEvents(new String[] { Events.DTSTART, Events.RRULE },
-                                     Events._ID + " = ?",
-                                     new String[] { Long.toString(id) },
-                                     Events.DTSTART);
+                    Events._ID + " = ?",
+                    new String[] { Long.toString(id) },
+                    Events.DTSTART);
             if (cur.moveToNext()) {
                 evDtStart = cur.getLong(0);
                 evRRule = cur.getString(1);
@@ -549,7 +559,7 @@ public abstract class AbstractCalendarAccessor {
         if (fromTime == -1 || evDtStart >= fromTime) {
             ContentResolver resolver = this.cordova.getActivity().getContentResolver();
             int deleted = this.cordova.getActivity().getContentResolver()
-                              .delete(ContentUris.withAppendedId(eventsUri, id), null, null);
+                    .delete(ContentUris.withAppendedId(eventsUri, id), null, null);
             return deleted > 0;
         }
 
@@ -594,7 +604,7 @@ public abstract class AbstractCalendarAccessor {
         ContentValues values = new ContentValues();
         values.put(Events.RRULE, evRRule);
         int updated = this.cordova.getActivity().getContentResolver()
-                          .update(ContentUris.withAppendedId(eventsUri, id), values, null, null);
+                .update(ContentUris.withAppendedId(eventsUri, id), values, null, null);
 
         return updated > 0;
     }

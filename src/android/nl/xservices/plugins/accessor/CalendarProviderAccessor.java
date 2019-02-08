@@ -27,6 +27,9 @@ public class CalendarProviderAccessor extends AbstractCalendarAccessor {
     keys.put(KeyIndex.CALENDARS_NAME, Calendars.NAME);
     keys.put(KeyIndex.CALENDARS_DISPLAY_NAME, Calendars.CALENDAR_DISPLAY_NAME);
     keys.put(KeyIndex.CALENDARS_VISIBLE, Calendars.VISIBLE);
+    keys.put(KeyIndex.CALENDARS_ACCOUNT_NAME, Calendars.ACCOUNT_NAME);
+    keys.put(KeyIndex.CALENDARS_ACCOUNT_TYPE, Calendars.ACCOUNT_TYPE);
+    keys.put(KeyIndex.CALENDARS_OWNER_ACCOUNT, Calendars.OWNER_ACCOUNT);
     keys.put(KeyIndex.EVENTS_ID, Events._ID);
     keys.put(KeyIndex.EVENTS_CALENDAR_ID, Events.CALENDAR_ID);
     keys.put(KeyIndex.EVENTS_DESCRIPTION, Events.DESCRIPTION);

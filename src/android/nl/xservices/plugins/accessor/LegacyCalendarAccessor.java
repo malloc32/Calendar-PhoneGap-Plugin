@@ -22,6 +22,9 @@ public class LegacyCalendarAccessor extends AbstractCalendarAccessor {
     keys.put(KeyIndex.CALENDARS_NAME, "name");
     keys.put(KeyIndex.CALENDARS_DISPLAY_NAME, "displayname");
     keys.put(KeyIndex.CALENDARS_VISIBLE, "selected");
+    keys.put(KeyIndex.CALENDARS_ACCOUNT_NAME, "account_name");
+    keys.put(KeyIndex.CALENDARS_ACCOUNT_TYPE, "account_type");
+    keys.put(KeyIndex.CALENDARS_OWNER_ACCOUNT, "ownerAccount");
     keys.put(KeyIndex.EVENTS_ID, "_id");
     keys.put(KeyIndex.EVENTS_CALENDAR_ID, "calendar_id");
     keys.put(KeyIndex.EVENTS_DESCRIPTION, "message");
